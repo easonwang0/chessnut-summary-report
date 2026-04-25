@@ -497,9 +497,9 @@ def fetch_chessnut_brand_monitor():
                 if in_section and '摘要' in line:
                     result['reddit_summary'] = line.split('摘要')[-1].lstrip('**:').strip()[:250]
             
-            # Parse competitor updates - look for dedicated 竞品 sections or Assessment mentions
-            competitor_keywords = ['SenseRobot', 'ChessUp', 'Square Off', 'DGT', 'Millenium']
-            seen_competitors = set()
+            # Parse competitor updates - ONLY pure competitor news (not Chessnut comparisons)
+            competitor_keywords = ['SenseRobot', 'Square Off', 'Phantom', 'ChessUp.*(?:launch|kickstarter|new|price|partner|update)', 'DGT.*(?:new|launch|partner)']
+            chessnut_keywords = ['Chessnut', 'chessnut', 'chessnutech', 'Chessnut Evo', 'Chessnut Go', 'Chessnut Move']
             
             # Check for dedicated 竞品 section
             in_section = False
@@ -511,16 +511,10 @@ def fetch_chessnut_brand_monitor():
                     break
                 if in_section and line.strip().startswith(('- ', '* ')):
                     text = line.strip().lstrip('- *').replace('**', '').strip()
+                    # Skip if it's mainly about Chessnut
                     if text and len(text) > 15:
-                        result['competitors'].append(text[:200])
-            
-            # If no dedicated section, extract key competitor mentions from Assessment
-            if not result['competitors']:
-                for line in lines:
-                    if any(kw in line for kw in competitor_keywords):
-                        text = line.strip().lstrip('- *').replace('**', '').strip()
-                        if text and len(text) > 20 and text[:30] not in seen_competitors:
-                            seen_competitors.add(text[:30])
+                        chessnut_count = sum(1 for kw in chessnut_keywords if kw in text)
+                        if chessnut_count == 0 or (chessnut_count == 1 and 'Chessnut' in text and len(text) > 60):
                             result['competitors'].append(text[:200])
             
             # Parse Assessment recommendations
