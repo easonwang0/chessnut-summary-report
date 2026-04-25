@@ -227,6 +227,11 @@ def build_report_content(shopify, amazon, ads, alerts, upcoming, exceptions, bra
             content += '<h4 style="color:var(--accent);margin:12px 0 6px;font-size:14px">📌 建议</h4>'
             for r in brand['recommendations']:
                 content += f'<div class="meta">• {r}</div>'
+        
+        if brand.get('competitors'):
+            content += '<h4 style="color:#a78bfa;margin:12px 0 6px;font-size:14px">🏁 竞品动态</h4>'
+            for c in brand['competitors'][:3]:
+                content += f'<div class="alert-card" style="border-left-color:#a78bfa"><div class="alert-desc">{c}</div></div>'
     
     return content
 

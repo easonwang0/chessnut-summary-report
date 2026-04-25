@@ -399,6 +399,7 @@ def fetch_chessnut_brand_monitor():
                 'date': '', 'status': '', 'stats': {},
                 'notable': [], 'positive': [], 'neutral': [],
                 'recommendations': [], 'reddit_summary': '',
+                'competitors': [],
             }
             
             basename = os.path.basename(fpath)
@@ -495,6 +496,32 @@ def fetch_chessnut_brand_monitor():
                     break
                 if in_section and '摘要' in line:
                     result['reddit_summary'] = line.split('摘要')[-1].lstrip('**:').strip()[:250]
+            
+            # Parse competitor updates - look for dedicated 竞品 sections or Assessment mentions
+            competitor_keywords = ['SenseRobot', 'ChessUp', 'Square Off', 'DGT', 'Millenium']
+            seen_competitors = set()
+            
+            # Check for dedicated 竞品 section
+            in_section = False
+            for i, line in enumerate(lines):
+                if '竞品' in line and line.startswith('##'):
+                    in_section = True
+                    continue
+                if in_section and line.startswith('## '):
+                    break
+                if in_section and line.strip().startswith(('- ', '* ')):
+                    text = line.strip().lstrip('- *').replace('**', '').strip()
+                    if text and len(text) > 15:
+                        result['competitors'].append(text[:200])
+            
+            # If no dedicated section, extract key competitor mentions from Assessment
+            if not result['competitors']:
+                for line in lines:
+                    if any(kw in line for kw in competitor_keywords):
+                        text = line.strip().lstrip('- *').replace('**', '').strip()
+                        if text and len(text) > 20 and text[:30] not in seen_competitors:
+                            seen_competitors.add(text[:30])
+                            result['competitors'].append(text[:200])
             
             # Parse Assessment recommendations
             in_section = False
